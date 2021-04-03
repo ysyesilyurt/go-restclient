@@ -31,8 +31,8 @@ var (
 )
 
 func init() {
-	infoLogger = log.New(os.Stdout, blue.add("[INFO] "), log.Ldate|log.Ltime|log.Lshortfile)
-	debugLogger = log.New(os.Stdout, green.add("[INFO] "), log.Ldate|log.Ltime|log.Lshortfile)
-	warningLogger = log.New(os.Stdout, yellow.add("[WARNING] "), log.Ldate|log.Ltime|log.Lshortfile)
-	errorLogger = log.New(os.Stdout, red.add("[ERROR] "), log.Ldate|log.Ltime|log.Lshortfile)
+	infoLogger = log.New(os.Stdout, blue.add("[ INFO  ] "), log.Ldate|log.Ltime|log.Lshortfile)
+	debugLogger = log.New(os.Stdout, green.add("[ DEBUG ] "), log.Ldate|log.Ltime|log.Lshortfile)
+	warningLogger = log.New(os.Stdout, yellow.add("[ WARN  ] "), log.Ldate|log.Ltime|log.Lshortfile)
+	errorLogger = log.New(os.Stdout, red.add("[ ERROR ] "), log.Ldate|log.Ltime|log.Lshortfile)
 }

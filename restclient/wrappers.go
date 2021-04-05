@@ -9,62 +9,62 @@ import (
 /* One-liner wrappers around HttpClient its methods. */
 
 /* PerformGetRequest creates a http.Request and a HttpClient with given timeout value,
-then performs a HTTP GET request using provided Authenticator. Decodes any response to responseRef */
-func PerformGetRequest(ri RequestInfo, auth Authenticator, responseRef interface{}, loggingEnabled bool, timeout time.Duration) error {
-	req, client, err := NewRequestAndClient(ri, loggingEnabled, timeout)
+then performs a HTTP GET request using provided Authenticator. Decodes any response to responseReference */
+func PerformGetRequest(ri RequestInfo, auth Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
+	req, client, err := newRequestAndClient(ri, loggingEnabled, timeout)
 	if err != nil {
 		return errors.Wrap(err, "Could not create request and client")
 	}
-	cri := NewDoRequestInfo(req, auth, &responseRef)
+	cri := NewDoRequestInfo(req, auth, &responseReference)
 	return client.Get(cri)
 }
 
 /* PerformPostRequest creates a http.Request and a HttpClient with given timeout value,
-then performs a HTTP POST request using provided Authenticator. Decodes any response to responseRef */
-func PerformPostRequest(ri RequestInfo, auth Authenticator, responseRef interface{}, loggingEnabled bool, timeout time.Duration) error {
-	req, client, err := NewRequestAndClient(ri, loggingEnabled, timeout)
+then performs a HTTP POST request using provided Authenticator. Decodes any response to responseReference */
+func PerformPostRequest(ri RequestInfo, auth Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
+	req, client, err := newRequestAndClient(ri, loggingEnabled, timeout)
 	if err != nil {
 		return errors.Wrap(err, "Could not create request and client")
 	}
-	cri := NewDoRequestInfo(req, auth, &responseRef)
+	cri := NewDoRequestInfo(req, auth, &responseReference)
 	return client.Post(cri)
 }
 
 /* PerformPutRequest creates a http.Request and a HttpClient with given timeout value,
-then performs a HTTP PUT request using provided Authenticator. Decodes any response to responseRef */
-func PerformPutRequest(ri RequestInfo, auth Authenticator, responseRef interface{}, loggingEnabled bool, timeout time.Duration) error {
-	req, client, err := NewRequestAndClient(ri, loggingEnabled, timeout)
+then performs a HTTP PUT request using provided Authenticator. Decodes any response to responseReference */
+func PerformPutRequest(ri RequestInfo, auth Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
+	req, client, err := newRequestAndClient(ri, loggingEnabled, timeout)
 	if err != nil {
 		return errors.Wrap(err, "Could not create request and client")
 	}
-	cri := NewDoRequestInfo(req, auth, &responseRef)
+	cri := NewDoRequestInfo(req, auth, &responseReference)
 	return client.Put(cri)
 }
 
 /* PerformPatchRequest creates a http.Request and a HttpClient with given timeout value,
-then performs a HTTP PATCH request using provided Authenticator. Decodes any response to responseRef */
-func PerformPatchRequest(ri RequestInfo, auth Authenticator, responseRef interface{}, loggingEnabled bool, timeout time.Duration) error {
-	req, client, err := NewRequestAndClient(ri, loggingEnabled, timeout)
+then performs a HTTP PATCH request using provided Authenticator. Decodes any response to responseReference */
+func PerformPatchRequest(ri RequestInfo, auth Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
+	req, client, err := newRequestAndClient(ri, loggingEnabled, timeout)
 	if err != nil {
 		return errors.Wrap(err, "Could not create request and client")
 	}
-	cri := NewDoRequestInfo(req, auth, &responseRef)
+	cri := NewDoRequestInfo(req, auth, &responseReference)
 	return client.Patch(cri)
 }
 
 /* PerformDeleteRequest creates a http.Request and a HttpClient with given timeout value,
-then performs a HTTP DELETE request using provided Authenticator. Decodes any response to responseRef */
-func PerformDeleteRequest(ri RequestInfo, auth Authenticator, responseRef interface{}, loggingEnabled bool, timeout time.Duration) error {
-	req, client, err := NewRequestAndClient(ri, loggingEnabled, timeout)
+then performs a HTTP DELETE request using provided Authenticator. Decodes any response to responseReference */
+func PerformDeleteRequest(ri RequestInfo, auth Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
+	req, client, err := newRequestAndClient(ri, loggingEnabled, timeout)
 	if err != nil {
 		return errors.Wrap(err, "Could not create request and client")
 	}
-	cri := NewDoRequestInfo(req, auth, &responseRef)
+	cri := NewDoRequestInfo(req, auth, &responseReference)
 	return client.Delete(cri)
 }
 
-/* NewRequestAndClient creates a http.Request and a HttpClient using provided RequestInfo, loggingEnabled and timeout values */
-func NewRequestAndClient(ri RequestInfo, loggingEnabled bool, timeout time.Duration) (*http.Request, HttpClient, error) {
+/* newRequestAndClient creates a http.Request and a HttpClient using provided RequestInfo, loggingEnabled and timeout values */
+func newRequestAndClient(ri RequestInfo, loggingEnabled bool, timeout time.Duration) (*http.Request, HttpClient, error) {
 	req, err := NewRequest(ri)
 	if err != nil {
 		return nil, HttpClient{}, errors.Wrap(err, "Could not create request")

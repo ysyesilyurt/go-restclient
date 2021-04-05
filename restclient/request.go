@@ -16,7 +16,7 @@ type RequestInfo struct {
 	Host         string       // Host e.g. ysyesilyurt.com
 	PathElements []string     // PathElements represents each component in the path that is separated by a slash (/) e.g. ['posts', '1']
 	Headers      *http.Header // Headers e.g {"Content-Type": []string{"application/json"}, "Cookie": []string{"test-1234"}}
-	Body         interface{}  // Body represents the RequestBody 'without marshalling'
+	Body         interface{}  // Body represents the to-be-marshalled RequestBody variable
 	QueryParams  *url.Values  // QueryParams e.g {"tenantId": []string{"d90c3101-53bc-4c54-94db-21582bab8e17"}, "vectorId": []string{"1"}}
 }
 

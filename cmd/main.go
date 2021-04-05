@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+type dummyBodyDto struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 type dummyHttpResponse struct {
 	StatusCode int         `json:"status_code"`
 	Data       interface{} `json:"data"`
@@ -41,8 +46,8 @@ func usage1() error {
 	}
 
 	client := restclient.NewHttpClient(true, 30*time.Second)
-	cri := restclient.NewDoRequestInfo(req, nil, &response)
-	err = client.Get(cri)
+	dri := restclient.NewDoRequestInfo(req, nil, &response)
+	err = client.Get(dri)
 	if err != nil {
 		return errors.Wrap(err, "Failed to do HTTP GET request")
 	}
@@ -50,9 +55,15 @@ func usage1() error {
 }
 
 func usage2() error {
+	var requestBody dummyBodyDto
 	var response dummyHttpResponse
+
+	requestBody = dummyBodyDto{
+		Id:   123,
+		Name: "1234",
+	}
 	headers := http.Header{"Content-Type": []string{"application/json"}, "Cookie": []string{"test-1234"}}
-	ri, err := restclient.NewRequestInfoFromRawURL("https://ysyesilyurt.com/tasks/1?tenantId=d90c3101-53bc-4c54-94db-21582bab8e17&vectorId=1", &headers, nil)
+	ri, err := restclient.NewRequestInfoFromRawURL("https://ysyesilyurt.com/tasks/1?tenantId=d90c3101-53bc-4c54-94db-21582bab8e17&vectorId=1", &headers, requestBody)
 	if err != nil {
 		return errors.Wrap(err, "Failed to construct RequestInfo out of Raw URL")
 	}
@@ -64,8 +75,8 @@ func usage2() error {
 
 	client := restclient.NewHttpClient(true, 0)
 	auth := NewTestBasicAuthenticator("ysyesilyurt", "0123")
-	cri := restclient.NewDoRequestInfoWithTimeout(req, auth, &response, 15*time.Second)
-	err = client.Get(cri)
+	dri := restclient.NewDoRequestInfoWithTimeout(req, auth, &response, 15*time.Second)
+	err = client.Post(dri)
 	if err != nil {
 		return errors.Wrap(err, "Failed to do HTTP GET request")
 	}

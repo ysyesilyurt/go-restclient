@@ -1,4 +1,4 @@
-module go-restclient
+module github.com/ysyesilyurt/go-restclient
 
 go 1.16
 

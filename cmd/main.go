@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/pkg/errors"
-	"go-restclient/restclient"
+	"github.com/ysyesilyurt/go-restclient/restclient"
 	"log"
 	"net/http"
 	"net/url"

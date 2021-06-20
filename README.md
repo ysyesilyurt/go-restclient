@@ -1,4 +1,4 @@
-# go-restclient
+# go-restclient (Legacy version)
 
 A Handy Go Package to Call Internal HTTP APIs
 

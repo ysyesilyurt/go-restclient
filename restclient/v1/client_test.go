@@ -1,9 +1,10 @@
-package restclient
+package v1
 
 import (
 	"encoding/json"
 	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/ysyesilyurt/go-restclient/restclient"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -22,7 +23,7 @@ type testBasicAuthenticator struct {
 	Username, Password string
 }
 
-func NewTestBasicAuthenticator(username, password string) Authenticator {
+func NewTestBasicAuthenticator(username, password string) restclient.Authenticator {
 	return &testBasicAuthenticator{
 		Username: username,
 		Password: password,

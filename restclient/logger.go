@@ -21,8 +21,8 @@ func (c color) add(s string) string {
 	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", uint8(c), s)
 }
 
-// infoLogger, debugLogger, warningLogger and errorLogger are internal private loggers to log requests
-// 3rd party go logging libraries have been avoided intentionally to omit unnecessary dependencies on the user.
+/* infoLogger, debugLogger, warningLogger and errorLogger are internal private loggers to log requests
+3rd party go logging libraries have been avoided intentionally to omit unnecessary dependencies on the user. */
 var (
 	infoLogger    *log.Logger
 	debugLogger   *log.Logger
@@ -31,8 +31,8 @@ var (
 )
 
 func init() {
-	infoLogger = log.New(os.Stdout, blue.add("[ INFO  ] "), log.Ldate|log.Ltime|log.Lshortfile)
-	debugLogger = log.New(os.Stdout, green.add("[ DEBUG ] "), log.Ldate|log.Ltime|log.Lshortfile)
-	warningLogger = log.New(os.Stdout, yellow.add("[ WARN  ] "), log.Ldate|log.Ltime|log.Lshortfile)
-	errorLogger = log.New(os.Stdout, red.add("[ ERROR ] "), log.Ldate|log.Ltime|log.Lshortfile)
+	infoLogger = log.New(os.Stdout, blue.add(" [ INFO ] "), log.Ldate|log.Ltime|log.Lshortfile)
+	debugLogger = log.New(os.Stdout, green.add(" [ DEBUG ] "), log.Ldate|log.Ltime|log.Lshortfile)
+	warningLogger = log.New(os.Stdout, yellow.add(" [ WARN ] "), log.Ldate|log.Ltime|log.Lshortfile)
+	errorLogger = log.New(os.Stdout, red.add(" [ ERROR ] "), log.Ldate|log.Ltime|log.Lshortfile)
 }

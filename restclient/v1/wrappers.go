@@ -1,7 +1,8 @@
-package restclient
+package v1
 
 import (
 	"github.com/pkg/errors"
+	"github.com/ysyesilyurt/go-restclient/restclient"
 	"net/http"
 	"time"
 )
@@ -10,7 +11,7 @@ import (
 
 /* PerformGetRequest creates a http.Request and a HttpClient with given timeout value,
 then performs a HTTP GET request using provided Authenticator. Decodes any response to responseReference */
-func PerformGetRequest(ri RequestInfo, auth Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
+func PerformGetRequest(ri RequestInfo, auth restclient.Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
 	req, client, err := newRequestAndClient(ri, loggingEnabled, timeout)
 	if err != nil {
 		return errors.Wrap(err, "Could not create request and client")
@@ -21,7 +22,7 @@ func PerformGetRequest(ri RequestInfo, auth Authenticator, responseReference int
 
 /* PerformPostRequest creates a http.Request and a HttpClient with given timeout value,
 then performs a HTTP POST request using provided Authenticator. Decodes any response to responseReference */
-func PerformPostRequest(ri RequestInfo, auth Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
+func PerformPostRequest(ri RequestInfo, auth restclient.Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
 	req, client, err := newRequestAndClient(ri, loggingEnabled, timeout)
 	if err != nil {
 		return errors.Wrap(err, "Could not create request and client")
@@ -32,7 +33,7 @@ func PerformPostRequest(ri RequestInfo, auth Authenticator, responseReference in
 
 /* PerformPutRequest creates a http.Request and a HttpClient with given timeout value,
 then performs a HTTP PUT request using provided Authenticator. Decodes any response to responseReference */
-func PerformPutRequest(ri RequestInfo, auth Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
+func PerformPutRequest(ri RequestInfo, auth restclient.Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
 	req, client, err := newRequestAndClient(ri, loggingEnabled, timeout)
 	if err != nil {
 		return errors.Wrap(err, "Could not create request and client")
@@ -43,7 +44,7 @@ func PerformPutRequest(ri RequestInfo, auth Authenticator, responseReference int
 
 /* PerformPatchRequest creates a http.Request and a HttpClient with given timeout value,
 then performs a HTTP PATCH request using provided Authenticator. Decodes any response to responseReference */
-func PerformPatchRequest(ri RequestInfo, auth Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
+func PerformPatchRequest(ri RequestInfo, auth restclient.Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
 	req, client, err := newRequestAndClient(ri, loggingEnabled, timeout)
 	if err != nil {
 		return errors.Wrap(err, "Could not create request and client")
@@ -54,7 +55,7 @@ func PerformPatchRequest(ri RequestInfo, auth Authenticator, responseReference i
 
 /* PerformDeleteRequest creates a http.Request and a HttpClient with given timeout value,
 then performs a HTTP DELETE request using provided Authenticator. Decodes any response to responseReference */
-func PerformDeleteRequest(ri RequestInfo, auth Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
+func PerformDeleteRequest(ri RequestInfo, auth restclient.Authenticator, responseReference interface{}, loggingEnabled bool, timeout time.Duration) error {
 	req, client, err := newRequestAndClient(ri, loggingEnabled, timeout)
 	if err != nil {
 		return errors.Wrap(err, "Could not create request and client")

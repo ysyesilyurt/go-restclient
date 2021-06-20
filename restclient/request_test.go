@@ -1,128 +1,294 @@
 package restclient
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"log"
 	"net/http"
-	"net/url"
+	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 )
 
-type testBodyDto struct {
-	TestId     int    `json:"test_id"`
-	TestString string `json:"test_string"`
+const (
+	testDataFormat = "%s - %s"
+	testSuccess    = "testSuccess"
+	testFailed     = "testFailed"
+)
+
+type testBasicAuthenticator struct {
+	username, password string
 }
 
-func TestNewRequest(t *testing.T) {
-	tbd := testBodyDto{
-		TestId:     123,
-		TestString: "1234",
-	}
-	wanted := createTestNewRequestWantArgs(tbd)
-	type args struct {
-		Scheme         string
-		Host           string
-		PathComponents []string
-		Headers        *http.Header
-		Body           interface{}
-		QueryParams    *url.Values
-	}
-	tests := []struct {
-		name string
-		args args
-		want *http.Request
-	}{
-		{
-			name: "Request without Body and pathParams, but has 2 query params",
-			args: args{
-				Scheme:         "https",
-				Host:           "ysyesilyurt.com",
-				PathComponents: []string{"assessments", "scroll"},
-				Headers:        &http.Header{"Content-Type": []string{"application/json"}, "Cookie": []string{"test-1234", "1234-test"}, "Xsrf-Token": []string{"CSRFToken"}, "X-Xsrf-Token": []string{"ab4f3712-1cd4-4860-9fec-1276866403da"}},
-				Body:           nil,
-				QueryParams:    &url.Values{"tenantId": []string{"d90c3101-53bc-4c54-94db-21582bab8e17"}, "vectorId": []string{"1"}},
-			},
-			want: wanted[0],
-		},
-		{
-			name: "Request with Body and pathParams, but has no query params",
-			args: args{
-				Scheme:         "https",
-				Host:           "ysyesilyurt.com",
-				PathComponents: []string{"assessments", "scroll", "d90c3101-53bc-4c54-94db-21582bab8e17", "1"},
-				Headers:        &http.Header{"Content-Type": []string{"application/json"}, "Cookie": []string{"test-1234", "1234-test"}},
-				Body:           tbd,
-				QueryParams:    nil,
-			},
-			want: wanted[1],
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ri := NewRequestInfo(tt.args.Scheme, tt.args.Host, tt.args.PathComponents, tt.args.QueryParams, tt.args.Headers, tt.args.Body)
-			req, err := NewRequest(ri)
-			Convey("Requests should be constructed without err and with proper fields", t, func() {
-				So(err, ShouldBeNil)
-				So(req.URL.Scheme, ShouldEqual, tt.want.URL.Scheme)
-				So(req.URL.Host, ShouldEqual, tt.want.URL.Host)
-				So(req.URL.Path, ShouldEqual, tt.want.URL.Path)
-				So(req.Header, ShouldResemble, tt.want.Header)
-				So(req.Body, ShouldResemble, tt.want.Body)
-				So(req.URL.RawQuery, ShouldEqual, tt.want.URL.RawQuery)
-			})
-		})
+func newTestBasicAuthenticator(username, password string) Authenticator {
+	return &testBasicAuthenticator{
+		username: username,
+		password: password,
 	}
 }
 
-func createTestNewRequestWantArgs(tbd testBodyDto) []*http.Request {
-	// Construct first resulting request
-	want1, err := http.NewRequest("", "https://ysyesilyurt.com/assessments/scroll?tenantId=d90c3101-53bc-4c54-94db-21582bab8e17&vectorId=1", nil)
-	if err != nil {
-		log.Fatalf("Could not construct first request want argument %s", err.Error())
-	}
-	want1.Header.Set("Content-Type", "application/json")
-	want1.Header.Set("Cookie", "test-1234")
-	want1.Header.Add("Cookie", "1234-test")
-	want1.Header.Set("Xsrf-Token", "CSRFToken")
-	want1.Header.Set("X-Xsrf-Token", "ab4f3712-1cd4-4860-9fec-1276866403da")
-
-	// Construct second resulting request
-	marshalled, err := json.Marshal(tbd)
-	if err != nil {
-		log.Fatalf("Could not marshal request body for the second request want argument %s", err.Error())
-	}
-	want2, err := http.NewRequest("", "https://ysyesilyurt.com/assessments/scroll/d90c3101-53bc-4c54-94db-21582bab8e17/1", bytes.NewReader(marshalled))
-	if err != nil {
-		log.Fatalf("Could not construct second request want argument %s", err.Error())
-	}
-	want2.Header.Set("Content-Type", "application/json")
-	want2.Header.Set("Cookie", "test-1234")
-	want2.Header.Add("Cookie", "1234-test")
-	return []*http.Request{want1, want2}
+func (b testBasicAuthenticator) Apply(request *http.Request) error {
+	request.SetBasicAuth(b.username, b.password)
+	return nil
 }
 
-func TestNewRequestInfoFromURL(t *testing.T) {
-	Convey("TEST Parse RequestInfo From Raw URL", t, func() {
-		tbd := testBodyDto{
-			TestId:     123,
-			TestString: "1234",
+type testRequestBody struct {
+	TestId   int    `json:"test_id"`
+	TestName string `json:"test_name"`
+}
+
+type testHttpResponse struct {
+	StatusCode int         `json:"status_code"`
+	Data       interface{} `json:"data"`
+}
+
+func TestHttpClientRequests(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var response testHttpResponse
+		w.Header().Set("Content-Type", "application/json")
+
+		handleRequest := func(reqMethod string, statusCode int, resultString string) {
+			username, password, ok := r.BasicAuth()
+			if !ok || username != "detection" || password != "0123" {
+				statusCode = http.StatusUnauthorized
+				resultString = testFailed
+			}
+			response.StatusCode = statusCode
+			response.Data = fmt.Sprintf(testDataFormat, resultString, reqMethod)
+			w.WriteHeader(statusCode)
 		}
-		headers := http.Header{"Content-Type": []string{"application/json"}, "Cookie": []string{"test-1234"}}
-		queryParams := url.Values{"tenantId": []string{"d90c3101-53bc-4c54-94db-21582bab8e17"}, "vectorId": []string{"1"}}
-		wantRi := NewRequestInfo("https", "ysyesilyurt.com", []string{"assessments", "scroll", "d90c3101-53bc-4c54-94db-21582bab8e17", "1"}, &queryParams, &headers, tbd)
-		parsedRi, err := NewRequestInfoFromRawURL(fmt.Sprintf("https://ysyesilyurt.com/assessments/scroll/d90c3101-53bc-4c54-94db-21582bab8e17/1?tenantId=%s&vectorId=%s", "d90c3101-53bc-4c54-94db-21582bab8e17", "1"), &headers, tbd)
-		Convey("Parsed request info should be identical to correct request info", func() {
-			So(err, ShouldBeNil)
-			So(parsedRi.Scheme, ShouldEqual, wantRi.Scheme)
-			So(parsedRi.Host, ShouldEqual, wantRi.Host)
-			So(parsedRi.PathElements, ShouldResemble, wantRi.PathElements)
-			So(parsedRi.QueryParams, ShouldResemble, wantRi.QueryParams)
-			So(parsedRi.Headers, ShouldResemble, wantRi.Headers)
-			So(parsedRi.Body, ShouldResemble, wantRi.Body)
+
+		handleRequestWithBody := func(reqMethod string) {
+			status := http.StatusOK
+			resultString := testSuccess
+			var body testRequestBody
+			err := unmarshalRequestBody(r, &body)
+			if err != nil || body.TestName != "Testing Request Body" || body.TestId != 123 {
+				status = http.StatusBadRequest
+				resultString = testFailed
+			}
+			handleRequest(reqMethod, status, resultString)
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			handleRequest(http.MethodGet, http.StatusOK, testSuccess)
+		case http.MethodPost:
+			handleRequestWithBody(http.MethodPost)
+		case http.MethodPut:
+			handleRequestWithBody(http.MethodPut)
+		case http.MethodPatch:
+			handleRequestWithBody(http.MethodPatch)
+		case http.MethodDelete:
+			handleRequest(http.MethodDelete, http.StatusOK, testSuccess)
+		default:
+			response.StatusCode = http.StatusForbidden
+			response.Data = fmt.Sprintf(testDataFormat, testFailed, r.Method)
+		}
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			log.Fatalf("httptest server failed to respond with testHttpResponse %v", err.Error())
+		}
+	}))
+	defer ts.Close()
+	// e.g. ts URL: http://127.0.0.1:63316
+	splittedURL := strings.Split(ts.URL, "://")
+	testServerScheme := splittedURL[0]
+	testServerHost := splittedURL[1]
+
+	Convey("TEST HTTP GET", t, func() {
+		var testResponse testHttpResponse
+		auth := newTestBasicAuthenticator("detection", "0123")
+		req, reqErr := RequestBuilder().
+			Scheme(testServerScheme).
+			Host(testServerHost).
+			Auth(auth).
+			ResponseReference(&testResponse).
+			Timeout(30 * time.Second).
+			LoggingEnabled(true).
+			Build()
+		if reqErr != nil {
+			log.Fatalf("failed to construct testRequest, %v", reqErr)
+		}
+
+		reqErr = req.Get()
+		Convey("Response should be fetched without any err and with proper Data", func() {
+			data, ok := testResponse.Data.(string)
+			So(reqErr, ShouldBeNil)
+			So(testResponse.StatusCode, ShouldEqual, http.StatusOK)
+			So(ok, ShouldBeTrue)
+			So(data, ShouldEqual, fmt.Sprintf(testDataFormat, testSuccess, http.MethodGet))
+		})
+	})
+
+	Convey("TEST HTTP GET with failing authentication credentials", t, func() {
+		var testResponse testHttpResponse
+		auth := newTestBasicAuthenticator("FAILING", "CREDENTIALS")
+		req, reqErr := RequestBuilder().
+			Scheme(testServerScheme).
+			Host(testServerHost).
+			Auth(auth).
+			ResponseReference(&testResponse).
+			Timeout(30 * time.Second).
+			LoggingEnabled(true).
+			Build()
+		if reqErr != nil {
+			log.Fatalf("failed to construct testRequest, %v", reqErr)
+		}
+
+		reqErr = req.Get()
+		Convey("Response should be fetched without any err and with proper Data", func() {
+			_, ok := testResponse.Data.(string)
+			So(ok, ShouldBeFalse)
+			So(testResponse.StatusCode, ShouldEqual, 0)
+			So(reqErr, ShouldNotBeNil)
+			So(reqErr.GetTopLevelError(), ShouldEqual, UnauthorizedErr)
+			So(reqErr.GetStatusCode(), ShouldEqual, http.StatusUnauthorized)
+		})
+	})
+
+	Convey("TEST HTTP POST with correct body", t, func() {
+		var testResponse testHttpResponse
+		testBody := testRequestBody{
+			TestId:   123,
+			TestName: "Testing Request Body",
+		}
+		auth := newTestBasicAuthenticator("detection", "0123")
+		req, reqErr := RequestBuilder().
+			Scheme(testServerScheme).
+			Host(testServerHost).
+			BodyJson(testBody).
+			Auth(auth).
+			ResponseReference(&testResponse).
+			Timeout(30 * time.Second).
+			LoggingEnabled(true).
+			Build()
+		if reqErr != nil {
+			log.Fatalf("failed to construct testRequest, %v", reqErr)
+		}
+
+		reqErr = req.Post()
+		Convey("Response should be fetched without any err and with proper Data", func() {
+			data, ok := testResponse.Data.(string)
+			So(reqErr, ShouldBeNil)
+			So(testResponse.StatusCode, ShouldEqual, http.StatusOK)
+			So(ok, ShouldBeTrue)
+			So(data, ShouldEqual, fmt.Sprintf(testDataFormat, testSuccess, http.MethodPost))
+		})
+	})
+
+	Convey("TEST HTTP POST with incorrect body", t, func() {
+		var testResponse testHttpResponse
+		testBody := "INCORRECT REQUEST BODY"
+		auth := newTestBasicAuthenticator("detection", "0123")
+		req, reqErr := RequestBuilder().
+			Scheme(testServerScheme).
+			Host(testServerHost).
+			BodyJson(testBody).
+			Auth(auth).
+			ResponseReference(&testResponse).
+			Timeout(30 * time.Second).
+			LoggingEnabled(true).
+			Build()
+		if reqErr != nil {
+			log.Fatalf("failed to construct testRequest, %v", reqErr)
+		}
+
+		reqErr = req.Post()
+		Convey("Response should be fetched without any err and with proper Data", func() {
+			_, ok := testResponse.Data.(string)
+			So(ok, ShouldBeFalse)
+			So(testResponse.StatusCode, ShouldEqual, 0)
+			So(reqErr, ShouldNotBeNil)
+			So(reqErr.GetTopLevelError(), ShouldEqual, ParseErr)
+			So(reqErr.GetStatusCode(), ShouldEqual, http.StatusBadRequest)
+		})
+	})
+
+	Convey("TEST HTTP PUT with correct body", t, func() {
+		var testResponse testHttpResponse
+		testBody := testRequestBody{
+			TestId:   123,
+			TestName: "Testing Request Body",
+		}
+		auth := newTestBasicAuthenticator("detection", "0123")
+		req, reqErr := RequestBuilder().
+			Scheme(testServerScheme).
+			Host(testServerHost).
+			BodyJson(testBody).
+			Auth(auth).
+			ResponseReference(&testResponse).
+			Timeout(30 * time.Second).
+			LoggingEnabled(true).
+			Build()
+		if reqErr != nil {
+			log.Fatalf("failed to construct testRequest, %v", reqErr)
+		}
+
+		reqErr = req.Put()
+		Convey("Response should be fetched without any err and with proper Data", func() {
+			data, ok := testResponse.Data.(string)
+			So(reqErr, ShouldBeNil)
+			So(testResponse.StatusCode, ShouldEqual, http.StatusOK)
+			So(ok, ShouldBeTrue)
+			So(data, ShouldEqual, fmt.Sprintf(testDataFormat, testSuccess, http.MethodPut))
+		})
+	})
+
+	Convey("TEST HTTP PATCH with correct body", t, func() {
+		var testResponse testHttpResponse
+		testBody := testRequestBody{
+			TestId:   123,
+			TestName: "Testing Request Body",
+		}
+		auth := newTestBasicAuthenticator("detection", "0123")
+		req, reqErr := RequestBuilder().
+			Scheme(testServerScheme).
+			Host(testServerHost).
+			BodyJson(testBody).
+			Auth(auth).
+			ResponseReference(&testResponse).
+			Timeout(30 * time.Second).
+			LoggingEnabled(true).
+			Build()
+		if reqErr != nil {
+			log.Fatalf("failed to construct testRequest, %v", reqErr)
+		}
+
+		reqErr = req.Patch()
+		Convey("Response should be fetched without any err and with proper Data", func() {
+			data, ok := testResponse.Data.(string)
+			So(reqErr, ShouldBeNil)
+			So(testResponse.StatusCode, ShouldEqual, http.StatusOK)
+			So(ok, ShouldBeTrue)
+			So(data, ShouldEqual, fmt.Sprintf(testDataFormat, testSuccess, http.MethodPatch))
+		})
+	})
+
+	Convey("TEST HTTP DELETE", t, func() {
+		var testResponse testHttpResponse
+		auth := newTestBasicAuthenticator("detection", "0123")
+		req, reqErr := RequestBuilder().
+			Scheme(testServerScheme).
+			Host(testServerHost).
+			Auth(auth).
+			ResponseReference(&testResponse).
+			Timeout(30 * time.Second).
+			LoggingEnabled(true).
+			Build()
+		if reqErr != nil {
+			log.Fatalf("failed to construct testRequest, %v", reqErr)
+		}
+
+		reqErr = req.Delete()
+		Convey("Response should be fetched without any err and with proper Data", func() {
+			data, ok := testResponse.Data.(string)
+			So(reqErr, ShouldBeNil)
+			So(testResponse.StatusCode, ShouldEqual, http.StatusOK)
+			So(ok, ShouldBeTrue)
+			So(data, ShouldEqual, fmt.Sprintf(testDataFormat, testSuccess, http.MethodDelete))
 		})
 	})
 }

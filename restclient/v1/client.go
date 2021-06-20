@@ -190,10 +190,13 @@ func (hc HttpClient) do(req *http.Request, method string, auth restclient.Authen
 		return err
 	}
 
+
 	// Read the body into respRef
-	err = UnmarshalResponseBody(resp, respRef)
-	if err != nil {
-		return errors.Wrap(err, "Failed to decode response body into responseRef")
+	if respRef != nil {
+		err = UnmarshalResponseBody(resp, respRef)
+		if err != nil {
+			return errors.Wrap(err, "Failed to decode response body into responseRef")
+		}
 	}
 	return nil
 }

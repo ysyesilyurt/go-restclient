@@ -1,10 +1,11 @@
-package restclient
+package v1
 
 import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
 	"github.com/pkg/errors"
+	"github.com/ysyesilyurt/go-restclient/restclient"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -49,12 +50,12 @@ func NewHttpClient(loggingEnabled bool, timeout time.Duration) HttpClient {
 
 type DoRequestInfo struct {
 	request        *http.Request
-	auth           Authenticator
+	auth           restclient.Authenticator
 	respRef        interface{}
 	requestTimeout time.Duration
 }
 
-func NewDoRequestInfo(request *http.Request, auth Authenticator, responseReference interface{}) DoRequestInfo {
+func NewDoRequestInfo(request *http.Request, auth restclient.Authenticator, responseReference interface{}) DoRequestInfo {
 	return DoRequestInfo{
 		request: request,
 		auth:    auth,
@@ -64,7 +65,7 @@ func NewDoRequestInfo(request *http.Request, auth Authenticator, responseReferen
 
 /* NewDoRequestInfoWithTimeout creates a DoRequestInfo with given requestTimeout. Should be used whenever a specific
 timeout value is required for individual request. Will override HttpClient timeout value when smaller, otherwise will have no effect. */
-func NewDoRequestInfoWithTimeout(request *http.Request, auth Authenticator, responseReference interface{}, requestTimeout time.Duration) DoRequestInfo {
+func NewDoRequestInfoWithTimeout(request *http.Request, auth restclient.Authenticator, responseReference interface{}, requestTimeout time.Duration) DoRequestInfo {
 	return DoRequestInfo{
 		request:        request,
 		auth:           auth,
@@ -103,7 +104,7 @@ func (hc HttpClient) Delete(dri DoRequestInfo) error {
 	return hc.do(dri.request, http.MethodDelete, dri.auth, dri.respRef, dri.requestTimeout)
 }
 
-func (hc HttpClient) do(req *http.Request, method string, auth Authenticator, respRef interface{}, timeout time.Duration) error {
+func (hc HttpClient) do(req *http.Request, method string, auth restclient.Authenticator, respRef interface{}, timeout time.Duration) error {
 
 	setHeaderIfNotSetAlready := func(key, value string) {
 		if req.Header.Get(key) == "" && value != "" {

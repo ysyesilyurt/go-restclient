@@ -222,8 +222,9 @@ req, reqErr := restclient.RequestBuilder().
 
 `go-restclient` defines `restclient.RequestError` interface to cover all the errors that can be returned
 from `restclient.RequestBuilder.Build()` and result of the HTTP calls. The top level errors returned by the client can
-be seen in [errors.go](). The methods that can be used within the boundaries of `restclient.RequestError` are as
-follows:
+be seen
+in [errors.go](https://github.com/ysyesilyurt/go-restclient/blob/bc71e1bf147e9293635583edbca00e5db08dd7d5/restclient/errors.go#L9)
+. The methods that can be used within the boundaries of `restclient.RequestError` are as follows:
 
 ```
 type RequestError interface {
@@ -242,12 +243,14 @@ type RequestError interface {
 
 ## Legacy Version
 
-You can also use the legacy version which is located on [`legacy` branch]() if you want to use `go-restclient` using
+You can also use the legacy version which is located
+on [`legacy` branch](https://github.com/ysyesilyurt/go-restclient/tree/legacy) if you want to use `go-restclient` using
 traditional ways (with constructing the helper objects and using those altogether blah blah...) or if you want to use a
 version that allows reusing the HTTP clients that's being used internally for sending the requests (Thanks to separation
 of these objects, this legacy version of `go-restclient` gives you the slightly extended feature set like _separation of
-client timeouts and request-specific timeouts_ and etc.). But all in all, I think the builder version is more handy and
-elegant so I just wanted to keep builder version on the master branch.
+client timeouts and request-specific timeouts_ and etc.). You can find more information about the version itself and its
+usage from [here](https://github.com/ysyesilyurt/go-restclient/tree/legacy#go-restclient-legacy-version). But all in all, I think the builder version is more handy and elegant so I just wanted to keep
+builder version on the master branch.
 
 ## Contribution
 

@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/pkg/errors"
 	"github.com/ysyesilyurt/go-restclient/restclient"
-	"github.com/ysyesilyurt/go-restclient/restclient/v1"
 	"log"
 	"net/http"
 	"net/url"
@@ -36,71 +35,74 @@ func (b dummyBasicAuthenticator) Apply(request *http.Request) error {
 	return nil
 }
 
+/* Example HTTP GET request with providing individual Scheme, Host, PathElements etc. fields */
 func usage1() error {
 	var response dummyHttpResponse
 	headers := http.Header{"Content-Type": []string{"application/json"}, "Cookie": []string{"test-1234"}}
 	queryParams := url.Values{"tenantId": []string{"d90c3101-53bc-4c54-94db-21582bab8e17"}, "vectorId": []string{"1"}}
-	ri := v1.NewRequestInfo("https", "ysyesilyurt.com", []string{"tasks", "1"}, &queryParams, &headers, nil)
-	req, err := v1.NewRequest(ri)
-	if err != nil {
-		return errors.Wrap(err, "Failed to construct http.Request out of RequestInfo")
+	testAuth := newTestBasicAuthenticator("ysyesilyurt", "0123")
+
+	// https://ysyesilyurt.com/tasks/1?tenantId=d90c3101-53bc-4c54-94db-21582bab8e17&vectorId=1
+	req, reqErr := restclient.RequestBuilder().
+		Scheme("https").
+		Host("ysyesilyurt.com").
+		PathElements([]string{"tasks", "1"}).
+		QueryParams(&queryParams).
+		Header(&headers).
+		Auth(testAuth).
+		ResponseReference(&response).
+		LoggingEnabled(true).
+		Timeout(30 * time.Second).
+		Build()
+
+	if reqErr != nil {
+		return errors.Wrap(reqErr, "Failed to construct HTTP request")
 	}
 
-	client := v1.NewHttpClient(true, 30*time.Second)
-	dri := v1.NewDoRequestInfo(req, nil, &response)
-	err = client.Get(dri)
-	if err != nil {
-		return errors.Wrap(err, "Failed to do HTTP GET request")
+	reqErr = req.Get()
+	if reqErr != nil {
+		return errors.Wrap(reqErr, "Failed to perform HTTP GET request")
 	}
 	return nil
 }
 
+/* Example HTTP POST request with requestBody and using defaults of some fields */
 func usage2() error {
-	var requestBody dummyBodyDto
 	var response dummyHttpResponse
-
-	requestBody = dummyBodyDto{
+	requestBody := dummyBodyDto{
 		Id:   123,
 		Name: "1234",
 	}
 	headers := http.Header{"Content-Type": []string{"application/json"}, "Cookie": []string{"test-1234"}}
-	ri, err := v1.NewRequestInfoFromRawURL("https://ysyesilyurt.com/tasks/1?tenantId=d90c3101-53bc-4c54-94db-21582bab8e17&vectorId=1", &headers, requestBody)
-	if err != nil {
-		return errors.Wrap(err, "Failed to construct RequestInfo out of Raw URL")
+	queryParams := url.Values{"tenantId": []string{"d90c3101-53bc-4c54-94db-21582bab8e17"}, "vectorId": []string{"1"}}
+	testAuth := newTestBasicAuthenticator("ysyesilyurt", "0123")
+
+	// Using following fields' defaults: LoggingEnabled (false), Timeout (60 secs)
+	// https://ysyesilyurt.com/tasks/1?tenantId=d90c3101-53bc-4c54-94db-21582bab8e17&vectorId=1
+	req, reqErr := restclient.RequestBuilder().
+		Scheme("https").
+		Host("ysyesilyurt.com").
+		PathElements([]string{"tasks", "1"}).
+		QueryParams(&queryParams).
+		BodyJson(requestBody).
+		Header(&headers).
+		Auth(testAuth).
+		ResponseReference(&response).
+		Build()
+
+	if reqErr != nil {
+		return errors.Wrap(reqErr, "Failed to construct HTTP request")
 	}
 
-	req, err := v1.NewRequest(ri)
-	if err != nil {
-		return errors.Wrap(err, "Failed to construct http.Request out of RequestInfo")
-	}
-
-	client := v1.NewHttpClient(true, 0)
-	auth := newTestBasicAuthenticator("ysyesilyurt", "0123")
-	dri := v1.NewDoRequestInfoWithTimeout(req, auth, &response, 15*time.Second)
-	err = client.Post(dri)
-	if err != nil {
-		return errors.Wrap(err, "Failed to do HTTP GET request")
+	reqErr = req.Post()
+	if reqErr != nil {
+		return errors.Wrap(reqErr, "Failed to perform HTTP POST request")
 	}
 	return nil
 }
 
+/* Example HTTP GET request with RawUrl */
 func usage3() error {
-	var response dummyHttpResponse
-	headers := http.Header{"Content-Type": []string{"application/json"}, "Cookie": []string{"test-1234"}}
-	ri, err := v1.NewRequestInfoFromRawURL("https://ysyesilyurt.com/tasks/1?tenantId=d90c3101-53bc-4c54-94db-21582bab8e17&vectorId=1", &headers, nil)
-	if err != nil {
-		return errors.Wrap(err, "Failed to construct RequestInfo out of Raw URL")
-	}
-
-	auth := newTestBasicAuthenticator("ysyesilyurt", "0123")
-	err = v1.PerformGetRequest(ri, auth, &response, true, 30*time.Second)
-	if err != nil {
-		return errors.Wrap(err, "Failed to perform HTTP GET request")
-	}
-	return nil
-}
-
-func usageBuilder() error {
 	var response dummyHttpResponse
 	rawUrl := "https://ysyesilyurt.com/tasks/1?tenantId=d90c3101-53bc-4c54-94db-21582bab8e17&vectorId=1"
 	headers := http.Header{"Content-Type": []string{"application/json"}, "Cookie": []string{"test-1234"}}
@@ -141,10 +143,5 @@ func main() {
 	err = usage3()
 	if err != nil {
 		log.Printf("Example usage3 failed, reason: %v", err)
-	}
-
-	err = usageBuilder()
-	if err != nil {
-		log.Printf("Example usageBuilder failed, reason: %v", err)
 	}
 }

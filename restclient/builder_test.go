@@ -19,7 +19,7 @@ func TestHttpRequestBuilder(t *testing.T) {
 		TestId:   123,
 		TestName: "1234",
 	}
-	testAuth := newTestBasicAuthenticator("detection", "0123")
+	testAuth := newTestBasicAuthenticator("username", "0123")
 	wanted := createTestNewRequestWantArgs(trb)
 
 	type args struct {
@@ -104,7 +104,7 @@ func TestHttpRequestBuilder(t *testing.T) {
 		{
 			name: "Request that is constructed with another http.Request",
 			args: args{
-				headers: &http.Header{"Content-Type": []string{"application/json"}, "Cookie": []string{"test-1234"}},
+				headers:     &http.Header{"Content-Type": []string{"application/json"}, "Cookie": []string{"test-1234"}},
 				auth:        testAuth,
 				responseRef: testResp,
 				request: func() *http.Request {

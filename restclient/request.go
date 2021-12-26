@@ -50,38 +50,38 @@ func (hr HttpRequest) YieldRequest() *http.Request {
 request on it (nil auth means no auth). Decodes any response into HttpRequest.respReference. Also uses HttpRequest.timeout value
 as the request timeout value, Zero (0) means no timeout. Returns a RequestError implying the result of the call */
 func (hr HttpRequest) Get() RequestError {
-	return hr.do(hr.request, http.MethodGet, hr.auth, hr.respReference, hr.timeout)
+	return doRequest(hr.request, http.MethodGet, hr.auth, hr.respReference, hr.loggingEnabled, hr.timeout)
 }
 
 /* Post performs an HTTP GET request using the provided HttpRequest fields. Applies HttpRequest.auth directly to the resulting
 request on it (nil auth means no auth). Decodes any response into HttpRequest.respReference. Also uses HttpRequest.timeout value
 as the request timeout value, Zero (0) means no timeout. Returns a RequestError implying the result of the call */
 func (hr HttpRequest) Post() RequestError {
-	return hr.do(hr.request, http.MethodPost, hr.auth, hr.respReference, hr.timeout)
+	return doRequest(hr.request, http.MethodPost, hr.auth, hr.respReference, hr.loggingEnabled, hr.timeout)
 }
 
 /* Put performs an HTTP GET request using the provided HttpRequest fields. Applies HttpRequest.auth directly to the resulting
 request on it (nil auth means no auth). Decodes any response into HttpRequest.respReference. Also uses HttpRequest.timeout value
 as the request timeout value, Zero (0) means no timeout. Returns a RequestError implying the result of the call */
 func (hr HttpRequest) Put() RequestError {
-	return hr.do(hr.request, http.MethodPut, hr.auth, hr.respReference, hr.timeout)
+	return doRequest(hr.request, http.MethodPut, hr.auth, hr.respReference, hr.loggingEnabled, hr.timeout)
 }
 
 /* Patch performs an HTTP GET request using the provided HttpRequest fields. Applies HttpRequest.auth directly to the resulting
 request on it (nil auth means no auth). Decodes any response into HttpRequest.respReference. Also uses HttpRequest.timeout value
 as the request timeout value, Zero (0) means no timeout. Returns a RequestError implying the result of the call */
 func (hr HttpRequest) Patch() RequestError {
-	return hr.do(hr.request, http.MethodPatch, hr.auth, hr.respReference, hr.timeout)
+	return doRequest(hr.request, http.MethodPatch, hr.auth, hr.respReference, hr.loggingEnabled, hr.timeout)
 }
 
 /* Delete performs an HTTP GET request using the provided HttpRequest fields. Applies HttpRequest.auth directly to the resulting
 request on it (nil auth means no auth). Decodes any response into HttpRequest.respReference. Also uses HttpRequest.timeout value
 as the request timeout value, Zero (0) means no timeout. Returns a RequestError implying the result of the call */
 func (hr HttpRequest) Delete() RequestError {
-	return hr.do(hr.request, http.MethodDelete, hr.auth, hr.respReference, hr.timeout)
+	return doRequest(hr.request, http.MethodDelete, hr.auth, hr.respReference, hr.loggingEnabled, hr.timeout)
 }
 
-func (hr HttpRequest) do(req *http.Request, method string, auth Authenticator, respRef interface{}, timeout time.Duration) RequestError {
+func doRequest(req *http.Request, method string, auth Authenticator, respRef interface{}, loggingEnabled bool, timeout time.Duration) RequestError {
 
 	setHeaderIfNotSetAlready := func(key, value string) {
 		if req.Header.Get(key) == "" && value != "" {
@@ -112,7 +112,7 @@ func (hr HttpRequest) do(req *http.Request, method string, auth Authenticator, r
 		var duration int64
 		var resp *http.Response
 
-		if hr.loggingEnabled {
+		if loggingEnabled {
 			startTime := time.Now()
 			resp, err = httpClient.Do(req)
 			duration = int64(time.Since(startTime) / time.Millisecond)
@@ -123,7 +123,7 @@ func (hr HttpRequest) do(req *http.Request, method string, auth Authenticator, r
 	}
 
 	logRequestIfEnabled := func(statusCode int, duration int64, err error) {
-		if hr.loggingEnabled {
+		if loggingEnabled {
 			logMsg := fmt.Sprintf("[status]: %d [duration-ms]: %d [url]: %s", statusCode, duration, req.URL.String())
 			if statusCode == 0 {
 				errorLogger.Printf("Request failed, %s, [err]: %v", logMsg, err)

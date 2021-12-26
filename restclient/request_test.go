@@ -51,7 +51,7 @@ func TestHttpClientRequests(t *testing.T) {
 
 		handleRequest := func(reqMethod string, statusCode int, resultString string) {
 			username, password, ok := r.BasicAuth()
-			if !ok || username != "detection" || password != "0123" {
+			if !ok || username != "username" || password != "0123" {
 				statusCode = http.StatusUnauthorized
 				resultString = testFailed
 			}
@@ -100,7 +100,7 @@ func TestHttpClientRequests(t *testing.T) {
 
 	Convey("TEST HTTP GET", t, func() {
 		var testResponse testHttpResponse
-		auth := newTestBasicAuthenticator("detection", "0123")
+		auth := newTestBasicAuthenticator("username", "0123")
 		req, reqErr := RequestBuilder().
 			Scheme(testServerScheme).
 			Host(testServerHost).
@@ -155,7 +155,7 @@ func TestHttpClientRequests(t *testing.T) {
 			TestId:   123,
 			TestName: "Testing Request Body",
 		}
-		auth := newTestBasicAuthenticator("detection", "0123")
+		auth := newTestBasicAuthenticator("username", "0123")
 		req, reqErr := RequestBuilder().
 			Scheme(testServerScheme).
 			Host(testServerHost).
@@ -182,7 +182,7 @@ func TestHttpClientRequests(t *testing.T) {
 	Convey("TEST HTTP POST with incorrect body", t, func() {
 		var testResponse testHttpResponse
 		testBody := "INCORRECT REQUEST BODY"
-		auth := newTestBasicAuthenticator("detection", "0123")
+		auth := newTestBasicAuthenticator("username", "0123")
 		req, reqErr := RequestBuilder().
 			Scheme(testServerScheme).
 			Host(testServerHost).
@@ -213,7 +213,7 @@ func TestHttpClientRequests(t *testing.T) {
 			TestId:   123,
 			TestName: "Testing Request Body",
 		}
-		auth := newTestBasicAuthenticator("detection", "0123")
+		auth := newTestBasicAuthenticator("username", "0123")
 		req, reqErr := RequestBuilder().
 			Scheme(testServerScheme).
 			Host(testServerHost).
@@ -243,7 +243,7 @@ func TestHttpClientRequests(t *testing.T) {
 			TestId:   123,
 			TestName: "Testing Request Body",
 		}
-		auth := newTestBasicAuthenticator("detection", "0123")
+		auth := newTestBasicAuthenticator("username", "0123")
 		req, reqErr := RequestBuilder().
 			Scheme(testServerScheme).
 			Host(testServerHost).
@@ -269,7 +269,7 @@ func TestHttpClientRequests(t *testing.T) {
 
 	Convey("TEST HTTP DELETE", t, func() {
 		var testResponse testHttpResponse
-		auth := newTestBasicAuthenticator("detection", "0123")
+		auth := newTestBasicAuthenticator("username", "0123")
 		req, reqErr := RequestBuilder().
 			Scheme(testServerScheme).
 			Host(testServerHost).
